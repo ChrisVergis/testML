@@ -128,7 +128,8 @@ def plot_Importances(N_features = 20, ordering='feature_importance_Score'):
     #To make nice comparison plot, rescale the scores in [0-1]
     Scaler =     MinMaxScaler()
     FeaturesPlot=featureImportances.copy()
-    for col in ['f_classif_Score', 'mutualinfo_classif_Score','feature_importance_Score']:
+    columns_to_rescale= FeaturesPlot.columns[1:]
+    for col in columns_to_rescale:
         FeaturesPlot[col] = Scaler.fit_transform(featureImportances[col].values.reshape(-1,1))
         
     #Now plot the N_feature top scores of the wanted score (ordering)
