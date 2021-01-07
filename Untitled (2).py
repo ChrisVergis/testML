@@ -3,9 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler, MinMaxScaler
-from sklearn.model_selection import train_test_split,RandomizedSearchCV
+from sklearn.model_selection import train_test_split,RandomizedSearchCV,GridSearchCV
+from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix,classification_report,plot_confusion_matrix, plot_roc_curve, plot_precision_recall_curve
+from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix,classification_report,plot_confusion_matrix
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+
 from sklearn.feature_selection import mutual_info_classif,f_classif,SelectKBest
 
 
@@ -179,3 +183,81 @@ plot_Importances(N_features = 20, ordering='feature_importance_Score')
 #FeaturesPlot.index = dataset.iloc[:-1].columns
 
 #FeaturesPlot.nlargest(15,'feature_importance_Score')
+
+
+
+
+BEST={'parameters': {
+        'NaiveBayes': {'var_smoothing': 0.115000001, 'priors': np.array([0.6, 0.4])}, 
+        'RandomForest': {'n_estimators': 17, 'min_samples_split': 5, 'min_samples_leaf': 4, 'max_features': 'auto', 'max_depth': 40, 'criterion': 'entropy', 'bootstrap': False}
+        }, 
+      'estimators': {
+        'NaiveBayes': GaussianNB(priors=np.array([0.6, 0.4]), var_smoothing=0.115000001), 
+        'RandomForest': RandomForestClassifier(bootstrap=False, criterion='entropy', max_depth=40,min_samples_leaf=4, min_samples_split=5,n_estimators=17)
+       }
+     }
+
+
+c_rf = BEST['estimators']['RandomForest']
+c_nb = BEST['estimators']['NaiveBayes']
+
+c_rf.fit(X_train,y_train)
+y_pred_rf = c_rf.predict(X_test)
+print( classification_report(y_test, y_pred_rf) )
+disp=plot_confusion_matrix(c_rf,X_test,y_test,display_labels=["Rich","Poor"], cmap=plt.cm.Blues)
+disp.ax_.set_title('RandomForest')
+plt.show()
+
+c_nb.fit(X_train,y_train)
+y_pred_nb = c_nb.predict(X_test)
+print( classification_report(y_test, y_pred_nb) )
+disp=plot_confusion_matrix(c_nb,X_test,y_test,display_labels=["Rich","Poor"], cmap=plt.cm.Blues)
+disp.ax_.set_title('Naive Bayes')
+plt.show()
+
+c_LogR = LogisticRegression(penalty='l2', C=46.41588833612773 , max_iter=1000)
+c_LogR.fit(X_train,y_train)
+y_pred_logR = c_LogR.predict(X_test)
+print( classification_report(y_test, y_pred_logR) )
+disp=plot_confusion_matrix(c_LogR,X_test,y_test,display_labels=["Rich","Poor"], cmap=plt.cm.Blues)
+disp.ax_.set_title('Logistic Regression')
+plt.show()
+
+c_kNN = KNeighborsClassifier(n_neighbors=14)
+c_kNN.fit(X_train,y_train)
+y_pred_knn = c_kNN.predict(X_test)
+print( classification_report(y_test, y_pred_knn) )
+disp=plot_confusion_matrix(c_kNN,X_test,y_test,display_labels=["Rich","Poor"], cmap=plt.cm.Blues)
+disp.ax_.set_title('kNN')
+plt.show()
+
+Classifier = ["RandomForest" , "NaiveBayes", "kNN" , "LogisticRegression"]
+estimator  = [c_rf           , c_nb        , c_kNN ,  c_LogR             ]
+Accuracy   = [  ]
+Recall     = [  ]
+Precision  = [  ]
+for y_pred in [y_pred_rf , y_pred_nb , y_pred_knn , y_pred_logR ]:
+    Accuracy.append( accuracy_score(y_test, y_pred) )
+    Recall.append( recall_score(y_test, y_pred) )
+    Precision.append(precision_score(y_test, y_pred))
+    
+Results = pd.concat( [pd.DataFrame(Classifier),pd.DataFrame(Accuracy),pd.DataFrame(Recall),pd.DataFrame(Precision)] , axis=1)
+Results.columns= ["Classifier", "Accuracy", "Recall", "Precision"] 
+Results = Results.nlargest(10,'Accuracy')
+Results.plot.bar("Classifier")
+plt.show()
+
+
+display = plot_roc_curve(estimator[0], X_test, y_test, name=Classifier[0])
+for i in range(1,len(Classifier)):
+    plot_roc_curve(estimator[i], X_test, y_test, name=Classifier[i], ax =display.ax_)
+plt.show()
+
+display2 = plot_precision_recall_curve(estimator[0], X_test, y_test, name=Classifier[0])
+for i in range(1,len(Classifier)):
+    plot_precision_recall_curve(estimator[i], X_test, y_test, name=Classifier[i], ax =display2.ax_)
+plt.show()
+
+
+
+
