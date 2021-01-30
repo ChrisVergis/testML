@@ -125,3 +125,36 @@ print(dataset)
 #fig.savefig('samplefigure', bbox_extra_artists=(lgd,text), bbox_inches='tight')
 
 plt.show()
+
+
+
+
+mapping = {"$\sigma_{tot} [fb]$": "$13TeV$", 
+       "$\sigma_{per} [fb]$": "$13TeV$",
+       "$\sigma_{fix} [fb]$": "$13TeV$",
+       "$\sigma_{tot}  [fb]$": "$14TeV$", 
+       "$\sigma_{per}  [fb]$": "$14TeV$",
+       "$\sigma_{fix}  [fb]$": "$14TeV$",
+       "total" : "Ratios $14TeV/13TeV$",
+       "percent" : "Ratios $14TeV/13TeV$",
+       "fixed" : "Ratios $14TeV/13TeV$"}
+dataset = pd.DataFrame(
+  {
+  "Mass [GeV]" : M1,
+  "$\sigma_{tot} [fb]$": x1,
+  "$\sigma_{per} [fb]$":x1p,
+  "$\sigma_{fix} [fb]$":x1pp,
+  "$\sigma_{tot}  [fb]$": x2,
+  "$\sigma_{per}  [fb]$":x2p,
+  "$\sigma_{fix}  [fb]$":x2pp,
+  "total": x2/x1,
+  "percent": x2p/x1p,
+  "fixed": x2pp/x1pp,
+  }
+  )
+dataset=dataset.set_index('Mass [GeV]')
+dataset=pd.concat(dict((*dataset.groupby(mapping, 1),)), axis=1)[["$13TeV$","$14TeV$","Ratios $14TeV/13TeV$"]]
+
+#dataset.columns = pd.MultiIndex.from_tuples([(dataset[col], col) for col in dataset.columns])
+
+dataset
